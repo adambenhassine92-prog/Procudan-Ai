@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Mic, Send, Volume2, VolumeX, FileText, Trash2, X, Plus, Menu,
-  Beaker, Scale, Package, ClipboardCheck, AlertTriangle, Paperclip, Globe, Image as ImageIcon
+  Beaker, Scale, Package, ClipboardCheck, AlertTriangle, Paperclip, Globe, Image as ImageIcon,
+  Building2, ExternalLink
 } from "lucide-react";
 
 const PROCESSES = [
@@ -123,6 +124,7 @@ export default function ProcudanAI() {
   const [voiceOutput, setVoiceOutput] = useState(true);
   const [sops, setSops] = useState([]);
   const [showSop, setShowSop] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
@@ -197,6 +199,7 @@ Retningslinjer:
 - Hvis du har adgang til websøgning og spørgsmålet kræver aktuel viden, så søg og angiv kilder.
 - Du kan modtage vedhæftede billeder og PDF'er (fx etiketter, SOP'er, batch-sedler) — læs dem og brug indholdet.
 - Svar på samme sprog som brugeren (standard: dansk). Hold sætningerne naturlige, da svaret også kan blive læst højt.`;
+    s += `\n\nOm virksomheden (reference): Procudan A/S er en dansk sourcing- og handelsvirksomhed i Kolding (Bronzevej 1, 6000 Kolding · tlf. 75 50 80 00 · CVR 28293860 · stiftet 2004 · ca. 50 ansatte · adm. direktør Tommy Højtoft Pedersen). Procudan leverer "single point sourcing" af fødevareingredienser, emballage og skræddersyede løsninger til fødevare-, nutrition- og pharmaindustrien — samt blandinger, ompakning, QA-dokumentation, logistik- og lagerløsning, risikostyring, IT-integration og forsyningssikkerhed. Slogan: "Adding value to your supply chain".`;
     if (proc) s += `\n\nAktivt procesområde lige nu: ${proc.label} (${proc.sub}).`;
     if (sops.length) {
       s += `\n\nVEDHÆFTEDE SOP-DOKUMENTER (autoritativ kilde — følg disse frem for generel viden):`;
@@ -329,6 +332,13 @@ Retningslinjer:
         </div>
 
         <div className="pa-section">
+          <div className="pa-label">Virksomhed</div>
+          <button className="pa-listbtn" onClick={() => setShowInfo(true)}>
+            <Building2 size={16} /> Procudan
+          </button>
+        </div>
+
+        <div className="pa-section">
           <div className="pa-label">Viden & indstillinger</div>
           <button className="pa-listbtn" onClick={() => setShowSop(true)}>
             <FileText size={16} /> SOP-dokumenter <span className="pa-count">{sops.length}</span>
@@ -424,6 +434,7 @@ Retningslinjer:
       </div>
 
       {showSop && <SopPanel sops={sops} setSops={setSops} onClose={() => setShowSop(false)} />}
+      {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
     </div>
   );
 }
@@ -457,6 +468,73 @@ function SopPanel({ sops, setSops, onClose }) {
             <textarea rows={5} placeholder="Indsæt selve instruktionen / SOP-teksten her…" value={body} onChange={(e) => setBody(e.target.value)} />
             <button className="pa-add" onClick={add} disabled={!title.trim() || !body.trim()}><Plus size={16} /> Tilføj dokument</button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoPanel({ onClose }) {
+  const tilbyder = [
+    "Single point sourcing & global sourcing",
+    "Projektledelse & produktudvikling",
+    "Blandinger (blends) & ompakning",
+    "Online QA-dokumentation",
+    "Logistik- & lagerløsning",
+    "Risikostyring & forsyningssikkerhed",
+    "IT-integration & market intelligence",
+  ];
+  const omraader = [
+    "Fødevareingredienser & enkeltingredienser",
+    "Fødevareemballage & skræddersyet emballage",
+    "Ostevoks",
+    "Pharma & nutrition",
+  ];
+  const facts = [
+    ["CVR", "28293860"],
+    ["Stiftet", "2004"],
+    ["Selskabsform", "Aktieselskab (A/S)"],
+    ["Medarbejdere", "ca. 50"],
+    ["Adm. direktør", "Tommy Højtoft Pedersen"],
+    ["Adresse", "Bronzevej 1, 6000 Kolding"],
+    ["Telefon", "75 50 80 00"],
+    ["Web", "procudan.dk"],
+  ];
+  const label = { padding: "0 0 8px" };
+  const li = { fontSize: "13.5px", lineHeight: 1.5 };
+  return (
+    <div className="pa-modal-bg" onClick={onClose}>
+      <div className="pa-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="pa-modal-head">
+          <div><b>Om Procudan</b><span>Adding value to your supply chain</span></div>
+          <button className="pa-x" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="pa-modal-body">
+          <p style={{ margin: 0, fontSize: "14px", lineHeight: 1.62, color: "var(--text2)" }}>
+            Procudan A/S er en dansk sourcing- og handelsvirksomhed med base i Kolding. Vi er specialister i <b>single point sourcing</b> — ét samlet kontaktpunkt for indkøb af fødevareingredienser, emballage og skræddersyede løsninger til fødevare-, nutrition- og pharmaindustrien. Vi skaber værdi i hele forsyningskæden gennem global sourcing, lokal tilstedeværelse og tæt partnerskab.
+          </p>
+          <div>
+            <div className="pa-label" style={label}>Det tilbyder vi</div>
+            <ul className="md-ul" style={{ paddingLeft: "18px" }}>{tilbyder.map((x) => <li key={x} style={li}>{x}</li>)}</ul>
+          </div>
+          <div>
+            <div className="pa-label" style={label}>Produktområder</div>
+            <ul className="md-ul" style={{ paddingLeft: "18px" }}>{omraader.map((x) => <li key={x} style={li}>{x}</li>)}</ul>
+          </div>
+          <div>
+            <div className="pa-label" style={label}>Fakta & kontakt</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {facts.map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: "12px", fontSize: "13.5px", borderBottom: "1px solid var(--border)", paddingBottom: "6px" }}>
+                  <span style={{ color: "var(--muted)" }}>{k}</span>
+                  <span style={{ fontWeight: 500, textAlign: "right" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <a href="https://procudan.dk" target="_blank" rel="noreferrer" className="pa-add" style={{ textDecoration: "none", marginTop: "4px" }}>
+            <ExternalLink size={16} /> Besøg procudan.dk
+          </a>
         </div>
       </div>
     </div>
