@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Mic, Send, Volume2, VolumeX, FileText, Trash2, X, Plus, Menu,
   Beaker, Scale, Package, ClipboardCheck, AlertTriangle, Paperclip, Globe, Image as ImageIcon,
-  Building2, ExternalLink
+  Building2, ExternalLink, Sparkles, Calculator, ListChecks, Wrench, Languages, ShieldCheck, Cpu
 } from "lucide-react";
 
 const PROCESSES = [
@@ -22,7 +22,17 @@ const QUICK_ACTIONS = {
   none: ["Hvad kan du hjælpe med?", "Forklar GMP kort", "Hvordan sikrer jeg sporbarhed?"],
 };
 
-// ---- Signature: animated particle-lattice logo ----
+const SKILLS = [
+  { id: "calc", label: "Produktionsberegninger", desc: "Dosering, skalering af batch, blandingsforhold & fyldevægt.", icon: Calculator, prompt: "Du kan udføre produktionsberegninger: dosering, op-/nedskalering af batches, blandingsforhold (ratio) og kontrol af fyldevægt. Vis altid mellemregninger trin for trin og angiv enheder." },
+  { id: "docs", label: "Dokumentgenerering", desc: "Batch-record, afvigelsesrapport & tjeklister.", icon: FileText, prompt: "Du kan generere udkast til produktionsdokumenter på struktureret form: batch-record, afvigelsesrapport (deviation) og tjeklister. Brug klare felter og overskrifter, og markér felter der skal udfyldes manuelt." },
+  { id: "checklist", label: "Interaktive tjeklister", desc: "Guider trin for trin, ét trin ad gangen.", icon: ListChecks, prompt: "Når en proces gennemgås, så før brugeren gennem den ÉT trin ad gangen som en interaktiv tjekliste: præsentér ét trin, vent på bekræftelse (fx 'næste' eller 'ok'), og fortsæt derefter til næste." },
+  { id: "troubleshoot", label: "Fejlsøgning", desc: "Struktureret årsagsanalyse ved problemer.", icon: Wrench, prompt: "Ved problemer udfører du struktureret fejlsøgning: spørg kort ind til symptomerne, oplist sandsynlige årsager prioriteret, og foreslå konkrete tjek og løsninger trin for trin." },
+  { id: "translate", label: "Oversæt svar", desc: "Oversæt svaret til et valgt sprog for medarbejderen.", icon: Languages, prompt: "Hvis brugeren beder om det, kan du oversætte dit svar til et andet sprog (fx engelsk, arabisk, polsk eller tysk). Hold fagudtryk korrekte." },
+  { id: "qa", label: "Fødevaresikkerhed & kvalitet (QA)", desc: "HACCP, GMP, ISO 22000, allergener, sporbarhed & audit.", icon: ShieldCheck, prompt: "Du agerer som en erfaren kvalitetssikrings- og fødevaresikkerhedsekspert (QA). Forankr dine svar i anerkendte rammer: HACCP, GMP/GHP, ISO 22000 / FSSC 22000, BRCGS, allergenstyring, hygiejne, fuld sporbarhed, kritiske kontrolpunkter (CCP), prøveudtagning, audit samt håndtering af afvigelser og korrigerende/forebyggende handlinger (CAPA). Forklar kort hvilket princip der er relevant, vær konkret og handlingsorienteret, og henvis altid til virksomhedens egne SOP'er og den kvalitetsansvarlige ved kritiske beslutninger." },
+  { id: "teknik", label: "Teknisk", desc: "Anlæg, maskiner, PLC/SCADA (TwinCAT), el, alarmer & fejlfinding.", icon: Cpu, prompt: "Du agerer som teknisk anlægs- og vedligeholdelsesekspert. Du hjælper med anlæg og maskiner, mekanik, el og pneumatik, PLC/SCADA-overvågning, Beckhoff TwinCAT-miljøet, HMI-betjening, alarm- og fejlhåndtering, opstart/nedlukning af udstyr samt opsætning af batch- og proceparametre. Giv altid systematisk fejlfinding trin for trin. Prioritér sikkerhed (nødstop, LOTO/lockout-tagout) og henvis til den driftsansvarlige, automatiktekniker eller elektriker ved indgreb i selve styringen eller el-installationen." },
+];
+
+
 function Logo({ size = 40, animated = true }) {
   const ring1 = [[83, 50], [66.5, 78.6], [33.5, 78.6], [17, 50], [33.5, 21.4], [66.5, 21.4]];
   const ring2 = [[67.3, 60], [50, 70], [32.7, 60], [32.7, 40], [50, 30], [67.3, 40]];
@@ -125,6 +135,8 @@ export default function ProcudanAI() {
   const [sops, setSops] = useState([]);
   const [showSop, setShowSop] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showSkills, setShowSkills] = useState(false);
+  const [skillsOn, setSkillsOn] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState(null);
   const [speechSupported, setSpeechSupported] = useState(true);
@@ -200,6 +212,12 @@ Retningslinjer:
 - Du kan modtage vedhæftede billeder og PDF'er (fx etiketter, SOP'er, batch-sedler) — læs dem og brug indholdet.
 - Svar på samme sprog som brugeren (standard: dansk). Hold sætningerne naturlige, da svaret også kan blive læst højt.`;
     s += `\n\nOm virksomheden (reference): Procudan A/S er en dansk sourcing- og handelsvirksomhed i Kolding (Bronzevej 1, 6000 Kolding · tlf. 75 50 80 00 · CVR 28293860 · stiftet 2004 · ca. 50 ansatte · adm. direktør Tommy Højtoft Pedersen). Procudan leverer "single point sourcing" af fødevareingredienser, emballage og skræddersyede løsninger til fødevare-, nutrition- og pharmaindustrien — samt blandinger, ompakning, QA-dokumentation, logistik- og lagerløsning, risikostyring, IT-integration og forsyningssikkerhed. Slogan: "Adding value to your supply chain".`;
+    s += `\n\nHvis du bliver spurgt, hvem der har bygget eller udviklet dig, så svar professionelt og kortfattet: "Jeg er udviklet for Procudan A/S af virksomhedens ingeniør, Adam Ben Hassine." Hold tonen professionel.`;
+    const activeSkills = SKILLS.filter((k) => skillsOn[k.id]);
+    if (activeSkills.length) {
+      s += `\n\nAKTIVE SKILLS (ekstra evner du skal anvende, når det er relevant):`;
+      activeSkills.forEach((k) => { s += `\n- ${k.label}: ${k.prompt}`; });
+    }
     if (proc) s += `\n\nAktivt procesområde lige nu: ${proc.label} (${proc.sub}).`;
     if (sops.length) {
       s += `\n\nVEDHÆFTEDE SOP-DOKUMENTER (autoritativ kilde — følg disse frem for generel viden):`;
@@ -340,6 +358,9 @@ Retningslinjer:
 
         <div className="pa-section">
           <div className="pa-label">Viden & indstillinger</div>
+          <button className="pa-listbtn" onClick={() => setShowSkills(true)}>
+            <Sparkles size={16} /> Skills <span className="pa-count">{Object.values(skillsOn).filter(Boolean).length}</span>
+          </button>
           <button className="pa-listbtn" onClick={() => setShowSop(true)}>
             <FileText size={16} /> SOP-dokumenter <span className="pa-count">{sops.length}</span>
           </button>
@@ -435,6 +456,7 @@ Retningslinjer:
 
       {showSop && <SopPanel sops={sops} setSops={setSops} onClose={() => setShowSop(false)} />}
       {showInfo && <InfoPanel onClose={() => setShowInfo(false)} />}
+      {showSkills && <SkillsPanel skillsOn={skillsOn} setSkillsOn={setSkillsOn} onClose={() => setShowSkills(false)} />}
     </div>
   );
 }
@@ -535,6 +557,35 @@ function InfoPanel({ onClose }) {
           <a href="https://procudan.dk" target="_blank" rel="noreferrer" className="pa-add" style={{ textDecoration: "none", marginTop: "4px" }}>
             <ExternalLink size={16} /> Besøg procudan.dk
           </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkillsPanel({ skillsOn, setSkillsOn, onClose }) {
+  const toggle = (id) => setSkillsOn({ ...skillsOn, [id]: !skillsOn[id] });
+  return (
+    <div className="pa-modal-bg" onClick={onClose}>
+      <div className="pa-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="pa-modal-head">
+          <div><b>Skills</b><span>Slå ekstra evner til og fra for assistenten</span></div>
+          <button className="pa-x" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="pa-modal-body">
+          {SKILLS.map((k) => {
+            const Icon = k.icon; const on = !!skillsOn[k.id];
+            return (
+              <button key={k.id} className="pa-sop" style={{ textAlign: "left", width: "100%", cursor: "pointer" }} onClick={() => toggle(k.id)}>
+                <span className="pa-sop-ic" style={on ? { background: "var(--accent)", color: "#fff" } : {}}><Icon size={15} /></span>
+                <div className="pa-sop-meta">
+                  <b>{k.label}</b>
+                  <span style={{ fontFamily: "'Inter', sans-serif", color: "var(--muted)", fontSize: "12px", whiteSpace: "normal" }}>{k.desc}</span>
+                </div>
+                <span className={`pa-toggle ${on ? "on" : ""}`}><i /></span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
